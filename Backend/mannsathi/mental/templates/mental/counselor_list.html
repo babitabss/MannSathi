@@ -1,0 +1,112 @@
+{% extends 'users/base.html' %}
+{% block title %}Find a Counselor{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap" style="max-width:1000px;">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <p style="font-size:12px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Counselors</p>
+        <h1>Find your counselor</h1>
+        <p>All counselors are NHPC-verified professionals. Sessions start from NPR 500.</p>
+    </div>
+
+    <!-- Filter bar -->
+    <div style="background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:16px 20px;margin-bottom:28px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:12px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.5px;margin-right:4px;">Filter</span>
+        <a href="{% url 'counselor_list' %}"
+           style="font-size:13px;padding:6px 14px;border-radius:100px;text-decoration:none;font-weight:500;
+                  {% if not specialization %}background:var(--teal);color:white;{% else %}background:var(--gray-100);color:var(--gray-600);{% endif %}">
+            All
+        </a>
+        {% for value, label in specializations %}
+        <a href="?specialization={{ value }}"
+           style="font-size:13px;padding:6px 14px;border-radius:100px;text-decoration:none;font-weight:500;
+                  {% if specialization == value %}background:var(--teal);color:white;{% else %}background:var(--gray-100);color:var(--gray-600);{% endif %}">
+            {{ label }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Counselor grid -->
+    {% if counselors %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
+        {% for counselor in counselors %}
+        <div class="card" style="padding:0;overflow:hidden;">
+
+            <!-- Top accent bar -->
+            <div style="height:4px;background:linear-gradient(90deg,var(--teal),var(--green));"></div>
+
+            <div style="padding:24px;">
+                <!-- Avatar + name -->
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                    <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--navy));
+                                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <span style="color:white;font-size:20px;font-weight:700;font-family:'Playfair Display',serif;">
+                            {{ counselor.user.get_full_name|default:counselor.user.username|first|upper }}
+                        </span>
+                    </div>
+                    <div>
+                        <h3 style="font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:2px;">
+                            {{ counselor.user.get_full_name|default:counselor.user.username }}
+                        </h3>
+                        <p style="font-size:12px;color:var(--gray-400);">{{ counselor.experience_years }} yrs experience · {{ counselor.get_language_display }}</p>
+                    </div>
+                </div>
+
+                <!-- Bio -->
+                <p style="font-size:13px;color:var(--gray-600);line-height:1.6;margin-bottom:16px;">
+                    {{ counselor.bio|truncatewords:18 }}
+                </p>
+
+                <!-- Specializations -->
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+                    {% for spec in counselor.specializations|slice:":3" %}
+                    <span style="font-size:11px;font-weight:600;background:var(--teal-light);color:var(--teal);
+                                 padding:3px 10px;border-radius:100px;">{{ spec }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Rating + price -->
+                <div style="display:flex;justify-content:space-between;align-items:center;
+                            padding-top:14px;border-top:1px solid var(--gray-100);">
+                    <div>
+                        <span style="font-size:12px;color:var(--gray-400);">Rating </span>
+                        <span style="font-size:13px;font-weight:700;color:var(--gray-900);">
+                            {% if counselor.average_rating %}⭐ {{ counselor.average_rating }}{% else %}New{% endif %}
+                        </span>
+                    </div>
+                    <div style="text-align:right;">
+                        <p style="font-size:11px;color:var(--gray-400);">per session</p>
+                        <p style="font-size:16px;font-weight:800;color:var(--teal);">NPR {{ counselor.price_per_session }}</p>
+                    </div>
+                </div>
+
+                <!-- Book button -->
+                <a href="{% url 'counselor_detail' counselor.pk %}"
+                   style="display:block;margin-top:14px;padding:10px;text-align:center;
+                          background:var(--teal);color:white;border-radius:var(--radius-sm);
+                          text-decoration:none;font-size:13px;font-weight:600;
+                          transition:all .15s;"
+                   onmouseover="this.style.background='var(--navy)'"
+                   onmouseout="this.style.background='var(--teal)'">
+                    View Profile & Book
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <h3>No counselors found</h3>
+        <p>Try a different specialization filter or check back soon.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

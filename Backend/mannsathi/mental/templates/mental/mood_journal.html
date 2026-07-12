@@ -1,0 +1,84 @@
+{% extends 'users/base.html' %}
+{% block title %}Mood Journal{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap">
+
+    <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+            <p style="font-size:12px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Journal</p>
+            <h1>Mood Journal</h1>
+            <p>A private record of how you feel over time.</p>
+        </div>
+        {% if not today_entry %}
+        <a href="{% url 'add_mood' %}" class="btn-primary"
+           style="width:auto;padding:10px 22px;text-decoration:none;display:inline-block;white-space:nowrap;">
+            + Log Today's Mood
+        </a>
+        {% else %}
+        <span class="badge badge-green" style="margin-top:8px;">✓ Logged today</span>
+        {% endif %}
+    </div>
+
+    {% if today_entry %}
+    <div style="background:linear-gradient(135deg,var(--teal),var(--navy));border-radius:var(--radius);padding:24px 28px;margin-bottom:28px;color:white;">
+        <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.6;margin-bottom:8px;">Today's Entry</p>
+        <p style="font-size:24px;font-weight:700;font-family:'Playfair Display',serif;margin-bottom:8px;">{{ today_entry.mood_label }}</p>
+        {% if today_entry.emotions %}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            {% for emotion in today_entry.emotions %}
+            <span style="font-size:12px;background:rgba(255,255,255,.15);padding:3px 10px;border-radius:100px;">{{ emotion }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if entries %}
+    <div class="section-card">
+        <div class="section-header"><span class="section-title">Past Entries</span></div>
+        {% for entry in entries %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;{% if not forloop.last %}border-bottom:1px solid var(--gray-100);{% endif %}">
+            <div style="display:flex;align-items:center;gap:16px;">
+                <div style="width:40px;height:40px;border-radius:50%;
+                    background:{% if entry.mood_score >= 4 %}var(--green-pale){% elif entry.mood_score == 3 %}var(--teal-light){% else %}#fef2f2{% endif %};
+                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span style="font-size:18px;">
+                        {% if entry.mood_score == 5 %}😄{% elif entry.mood_score == 4 %}🙂{% elif entry.mood_score == 3 %}😐{% elif entry.mood_score == 2 %}😔{% else %}😢{% endif %}
+                    </span>
+                </div>
+                <div>
+                    <p style="font-size:14px;font-weight:600;color:var(--gray-900);margin-bottom:3px;">{{ entry.mood_label }}</p>
+                    {% if entry.emotions %}
+                    <p style="font-size:12px;color:var(--gray-400);">{{ entry.emotions|join:", " }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <p style="font-size:13px;color:var(--gray-400);">{{ entry.date|date:"M d, Y" }}</p>
+                {% if entry.notes %}
+                <a href="{% url 'mood_detail' entry.pk %}" style="font-size:12px;color:var(--teal);text-decoration:none;font-weight:600;">View notes</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="section-card">
+        <div class="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            <h3>No entries yet</h3>
+            <p>Start by logging how you feel today.</p>
+            <a href="{% url 'add_mood' %}" class="btn-primary"
+               style="display:inline-block;width:auto;padding:10px 24px;text-decoration:none;margin-top:16px;">
+                Log First Mood
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

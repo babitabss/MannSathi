@@ -1,0 +1,79 @@
+{% extends 'users/base.html' %}
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap" style="max-width:680px;">
+
+    <a href="{% url 'community_feed' %}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-400);text-decoration:none;margin-bottom:24px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to Community
+    </a>
+
+    <!-- Post -->
+    <div class="section-card" style="margin-bottom:24px;">
+        <div style="padding:32px;">
+            <span class="badge badge-blue" style="margin-bottom:12px;display:inline-block;">{{ post.get_category_display }}</span>
+            <h1 style="font-size:24px;font-weight:700;color:var(--gray-900);letter-spacing:-.3px;margin-bottom:16px;font-family:'Playfair Display',serif;">
+                {{ post.title }}
+            </h1>
+            <p style="font-size:15px;color:var(--gray-600);line-height:1.8;margin-bottom:24px;">{{ post.content }}</p>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:20px;border-top:1px solid var(--gray-100);">
+                <span style="font-size:13px;color:var(--gray-400);">
+                    {{ post.display_name }} · {{ post.created_at|date:"M d, Y" }}
+                </span>
+                <a href="{% url 'like_post' post.pk %}"
+                   style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;text-decoration:none;
+                          padding:7px 16px;border-radius:100px;border:1.5px solid;
+                          {% if user_liked %}border-color:var(--red);color:var(--red);background:#fef2f2;{% else %}border-color:var(--gray-200);color:var(--gray-400);{% endif %}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="{% if user_liked %}var(--red){% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                    </svg>
+                    {{ post.total_likes }} {% if user_liked %}Liked{% else %}Like{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2 style="font-size:16px;font-weight:700;color:var(--gray-900);">{{ comments.count }} Comment{{ comments.count|pluralize }}</h2>
+    </div>
+
+    {% for comment in comments %}
+    <div class="section-card" style="margin-bottom:12px;">
+        <div style="padding:20px 24px;">
+            <p style="font-size:14px;color:var(--gray-600);line-height:1.7;margin-bottom:10px;">{{ comment.content }}</p>
+            <span style="font-size:12px;color:var(--gray-400);">{{ comment.display_name }} · {{ comment.created_at|date:"M d, Y" }}</span>
+        </div>
+    </div>
+    {% empty %}
+    <div class="section-card" style="margin-bottom:24px;">
+        <div class="empty-state" style="padding:36px;">
+            <p>No comments yet. Be the first to respond.</p>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Add Comment -->
+    <div class="section-card" style="margin-top:24px;">
+        <div class="section-header"><span class="section-title">Leave a Response</span></div>
+        <div class="section-body">
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="field-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn-primary">Post Comment</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

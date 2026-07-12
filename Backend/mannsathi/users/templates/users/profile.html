@@ -1,0 +1,124 @@
+{% extends 'users/base.html' %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap" style="max-width:800px;">
+
+    <!-- Profile Header -->
+    <div class="section-card" style="margin-bottom:24px;overflow:hidden;">
+        <div style="height:100px;background:linear-gradient(135deg,var(--navy),var(--teal));"></div>
+        <div style="padding:0 32px 32px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-32px;flex-wrap:wrap;gap:16px;">
+                <div style="display:flex;align-items:flex-end;gap:16px;">
+                    <div style="width:72px;height:72px;border-radius:50%;border:4px solid white;
+                                background:linear-gradient(135deg,var(--teal),var(--navy));
+                                display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+                        {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                        {% else %}
+                        <span style="font-size:26px;font-weight:700;color:white;font-family:'Playfair Display',serif;">
+                            {{ user.username|first|upper }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div style="margin-bottom:4px;">
+                        <h1 style="font-size:20px;font-weight:700;color:var(--gray-900);letter-spacing:-.3px;">
+                            {{ user.get_full_name|default:user.username }}
+                        </h1>
+                        <p style="font-size:13px;color:var(--gray-400);">
+                            {{ user.email }}{% if user.district %} · {{ user.get_district_display }}{% endif %}
+                        </p>
+                        {% if user.is_counselor %}
+                        <span class="badge badge-green" style="margin-top:6px;display:inline-block;">✓ Verified Counselor</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;margin-bottom:4px;">
+                    <a href="{% url 'profile_edit' %}"
+                       style="font-size:13px;font-weight:500;padding:8px 16px;border:1.5px solid var(--gray-200);
+                              border-radius:var(--radius-sm);text-decoration:none;color:var(--gray-600);">
+                        Edit Profile
+                    </a>
+                    <a href="{% url 'change_password' %}"
+                       style="font-size:13px;font-weight:500;padding:8px 16px;border:1.5px solid var(--gray-200);
+                              border-radius:var(--radius-sm);text-decoration:none;color:var(--gray-600);">
+                        Change Password
+                    </a>
+                </div>
+            </div>
+            {% if user.bio %}
+            <p style="font-size:14px;color:var(--gray-600);line-height:1.7;margin-top:20px;padding-top:20px;border-top:1px solid var(--gray-100);">
+                {{ user.bio }}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
+        <div class="section-card" style="padding:20px;text-align:center;">
+            <p style="font-size:28px;font-weight:800;color:var(--teal);font-family:'Playfair Display',serif;">{{ mood_count }}</p>
+            <p style="font-size:11px;color:var(--gray-400);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">Mood Entries</p>
+        </div>
+        <div class="section-card" style="padding:20px;text-align:center;">
+            <p style="font-size:28px;font-weight:800;color:var(--green);font-family:'Playfair Display',serif;">{{ booking_count }}</p>
+            <p style="font-size:11px;color:var(--gray-400);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">Sessions</p>
+        </div>
+        <div class="section-card" style="padding:20px;text-align:center;">
+            <p style="font-size:28px;font-weight:800;color:var(--red);font-family:'Playfair Display',serif;">{{ post_count }}</p>
+            <p style="font-size:11px;color:var(--gray-400);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">Posts</p>
+        </div>
+        <div class="section-card" style="padding:20px;text-align:center;">
+            <p style="font-size:28px;font-weight:800;color:var(--amber);font-family:'Playfair Display',serif;">{{ expense_total }}</p>
+            <p style="font-size:11px;color:var(--gray-400);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">Spent (NPR)</p>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+
+        <!-- Recent Moods -->
+        {% if recent_moods %}
+        <div class="section-card">
+            <div class="section-header"><span class="section-title">Recent Moods</span></div>
+            {% for entry in recent_moods %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 20px;{% if not forloop.last %}border-bottom:1px solid var(--gray-100);{% endif %}">
+                <div>
+                    <p style="font-size:13.5px;font-weight:600;color:var(--gray-900);">{{ entry.mood_label }}</p>
+                    {% if entry.emotions %}
+                    <p style="font-size:12px;color:var(--gray-400);margin-top:2px;">{{ entry.emotions|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <p style="font-size:12px;color:var(--gray-400);">{{ entry.date|date:"M d" }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Account Info -->
+        <div class="section-card">
+            <div class="section-header"><span class="section-title">Account Info</span></div>
+            {% if user.phone %}
+            <div style="display:flex;justify-content:space-between;padding:13px 20px;border-bottom:1px solid var(--gray-100);">
+                <span style="font-size:13px;color:var(--gray-400);">Phone</span>
+                <span style="font-size:13px;font-weight:500;color:var(--gray-900);">{{ user.phone }}</span>
+            </div>
+            {% endif %}
+            <div style="display:flex;justify-content:space-between;padding:13px 20px;border-bottom:1px solid var(--gray-100);">
+                <span style="font-size:13px;color:var(--gray-400);">Language</span>
+                <span style="font-size:13px;font-weight:500;color:var(--gray-900);">{{ user.get_language_pref_display }}</span>
+            </div>
+            {% if user.date_of_birth %}
+            <div style="display:flex;justify-content:space-between;padding:13px 20px;border-bottom:1px solid var(--gray-100);">
+                <span style="font-size:13px;color:var(--gray-400);">Date of Birth</span>
+                <span style="font-size:13px;font-weight:500;color:var(--gray-900);">{{ user.date_of_birth }}</span>
+            </div>
+            {% endif %}
+            <div style="display:flex;justify-content:space-between;padding:13px 20px;">
+                <span style="font-size:13px;color:var(--gray-400);">Member Since</span>
+                <span style="font-size:13px;font-weight:500;color:var(--gray-900);">{{ user.created_at|date:"M d, Y" }}</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

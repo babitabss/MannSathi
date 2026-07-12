@@ -1,0 +1,198 @@
+{% extends 'users/base.html' %}
+{% block title %}Chat — {{ other_user.get_full_name|default:other_user.username }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap" style="max-width:720px;">
+
+    <a href="{% if request.user == booking.user %}{% url 'my_bookings' %}{% else %}{% url 'counselor_bookings' %}{% endif %}"
+       style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-400);text-decoration:none;margin-bottom:24px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        Back
+    </a>
+
+    <!-- Chat header -->
+    <div style="background:linear-gradient(135deg,var(--navy),var(--teal));border-radius:var(--radius) var(--radius) 0 0;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2);
+                        display:flex;align-items:center;justify-content:center;">
+                <span style="color:white;font-size:18px;font-weight:700;">
+                    {{ other_user.get_full_name|default:other_user.username|first|upper }}
+                </span>
+            </div>
+            <div>
+                <p style="font-size:15px;font-weight:700;color:white;">
+                    {{ other_user.get_full_name|default:other_user.username }}
+                </p>
+                <p style="font-size:12px;color:rgba(255,255,255,.6);">
+                    {{ booking.get_session_type_display }} · {{ booking.scheduled_at|date:"M d, Y" }}
+                </p>
+            </div>
+        </div>
+        <span id="connection-status"
+              style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px;
+                     background:rgba(255,255,255,.15);color:rgba(255,255,255,.7);">
+            Connecting...
+        </span>
+    </div>
+
+    <!-- Messages area -->
+    <div id="messages"
+         style="height:460px;overflow-y:auto;padding:24px;background:white;
+                border-left:1.5px solid var(--gray-200);border-right:1.5px solid var(--gray-200);
+                display:flex;flex-direction:column;gap:12px;">
+
+        {% for msg in chat_messages %}
+        <div style="display:flex;{% if msg.sender == request.user %}justify-content:flex-end;{% endif %}">
+            <div style="max-width:70%;">
+                {% if msg.sender != request.user %}
+                <p style="font-size:11px;font-weight:600;color:var(--gray-400);margin-bottom:4px;padding-left:4px;">
+                    {{ msg.sender.get_full_name|default:msg.sender.username }}
+                </p>
+                {% endif %}
+                <div style="padding:10px 14px;border-radius:{% if msg.sender == request.user %}16px 4px 16px 16px{% else %}4px 16px 16px 16px{% endif %};
+                            background:{% if msg.sender == request.user %}var(--teal){% else %}var(--gray-100){% endif %};
+                            color:{% if msg.sender == request.user %}white{% else %}var(--gray-900){% endif %};">
+                    <p style="font-size:14px;line-height:1.5;">{{ msg.message }}</p>
+                </div>
+                <p style="font-size:11px;color:var(--gray-400);margin-top:4px;
+                          {% if msg.sender == request.user %}text-align:right;{% endif %}padding:0 4px;">
+                    {{ msg.timestamp|date:"g:i A" }}
+                </p>
+            </div>
+        </div>
+        {% empty %}
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;">
+            <div>
+                <svg width="40" height="40" fill="none" stroke="var(--gray-200)" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px;">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+                <p style="font-size:14px;color:var(--gray-400);">No messages yet. Say hello!</p>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- Input area -->
+    <div style="background:white;border:1.5px solid var(--gray-200);border-top:none;
+                border-radius:0 0 var(--radius) var(--radius);padding:16px 20px;
+                display:flex;gap:12px;align-items:flex-end;">
+        <textarea id="message-input"
+                  placeholder="Type a message..."
+                  rows="1"
+                  style="flex:1;resize:none;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);
+                         padding:10px 14px;font-size:14px;font-family:'Inter',sans-serif;
+                         color:var(--gray-900);outline:none;max-height:120px;overflow-y:auto;
+                         transition:border-color .15s;"
+                  onfocus="this.style.borderColor='var(--teal)'"
+                  onblur="this.style.borderColor='var(--gray-200)'"
+                  onkeydown="handleKeyDown(event)"></textarea>
+        <button onclick="sendMessage()"
+                style="width:44px;height:44px;border-radius:50%;background:var(--teal);border:none;
+                       cursor:pointer;display:flex;align-items:center;justify-content:center;
+                       flex-shrink:0;transition:background .15s;"
+                onmouseover="this.style.background='var(--navy)'"
+                onmouseout="this.style.background='var(--teal)'">
+            <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+        </button>
+    </div>
+
+</div>
+
+<script>
+    const bookingId  = {{ booking.pk }};
+    const myUsername = "{{ request.user.username }}";
+    const wsUrl      = `ws://${window.location.host}/ws/chat/${bookingId}/`;
+    const socket     = new WebSocket(wsUrl);
+    const messagesEl = document.getElementById('messages');
+    const statusEl   = document.getElementById('connection-status');
+    const inputEl    = document.getElementById('message-input');
+
+    socket.onopen = function() {
+        statusEl.textContent  = 'Connected';
+        statusEl.style.background = 'rgba(46,204,113,.25)';
+        statusEl.style.color      = '#a7f3d0';
+    };
+
+    socket.onclose = function() {
+        statusEl.textContent  = 'Disconnected';
+        statusEl.style.background = 'rgba(239,68,68,.25)';
+        statusEl.style.color      = '#fca5a5';
+    };
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        appendMessage(data.sender, data.message, data.timestamp);
+        scrollToBottom();
+    };
+
+    function appendMessage(sender, message, timestamp) {
+        const isMe  = sender === myUsername;
+        const wrap  = document.createElement('div');
+        wrap.style.cssText = `display:flex;${isMe ? 'justify-content:flex-end;' : ''}`;
+
+        const inner = document.createElement('div');
+        inner.style.maxWidth = '70%';
+
+        if (!isMe) {
+            const name = document.createElement('p');
+            name.style.cssText = 'font-size:11px;font-weight:600;color:#94a3b8;margin-bottom:4px;padding-left:4px;';
+            name.textContent   = sender;
+            inner.appendChild(name);
+        }
+
+        const bubble = document.createElement('div');
+        bubble.style.cssText = `padding:10px 14px;
+            border-radius:${isMe ? '16px 4px 16px 16px' : '4px 16px 16px 16px'};
+            background:${isMe ? '#1a5f7a' : '#f1f5f9'};
+            color:${isMe ? 'white' : '#0f172a'};`;
+        const msgP = document.createElement('p');
+        msgP.style.cssText = 'font-size:14px;line-height:1.5;';
+        msgP.textContent   = message;
+        bubble.appendChild(msgP);
+        inner.appendChild(bubble);
+
+        const time = document.createElement('p');
+        time.style.cssText = `font-size:11px;color:#94a3b8;margin-top:4px;padding:0 4px;${isMe ? 'text-align:right;' : ''}`;
+        time.textContent   = timestamp;
+        inner.appendChild(time);
+
+        wrap.appendChild(inner);
+        messagesEl.appendChild(wrap);
+    }
+
+    function sendMessage() {
+        const message = inputEl.value.trim();
+        if (!message || socket.readyState !== WebSocket.OPEN) return;
+        socket.send(JSON.stringify({ message }));
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+    }
+
+    function handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+        // Auto resize textarea
+        inputEl.style.height = 'auto';
+        inputEl.style.height = inputEl.scrollHeight + 'px';
+    }
+
+    function scrollToBottom() {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Remove empty state when first message arrives
+    const emptyState = messagesEl.querySelector('div[style*="flex:1"]');
+
+    // Scroll to bottom on load
+    scrollToBottom();
+</script>
+
+{% endblock %}

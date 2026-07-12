@@ -1,0 +1,65 @@
+{% extends 'users/base.html' %}
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+
+    <!-- Left panel -->
+    <div class="auth-left">
+        <div class="auth-left-content">
+            <p style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:2px;margin-bottom:24px;">MannSaathi</p>
+            <h2>Healing minds, one step at a time</h2>
+            <p>Join thousands of Nepalis who are taking charge of their mental and financial wellbeing with expert guidance and community support.</p>
+            <div style="margin-top:40px;display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <p style="font-size:14px;color:rgba(255,255,255,.7);">Book sessions with NHPC-verified counselors</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <p style="font-size:14px;color:rgba(255,255,255,.7);">Pay securely via eSewa or Khalti</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <p style="font-size:14px;color:rgba(255,255,255,.7);">Anonymous community & daily mood tracking</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="auth-right" style="overflow-y:auto;align-items:flex-start;padding-top:48px;">
+        <div class="auth-card">
+            <h1>Create your account</h1>
+            <p class="subtitle">Free forever. No credit card required.</p>
+
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                    {% if field.name != 'role' %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="field-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+                <button type="submit" class="btn-primary" style="margin-top:8px;">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="{% url 'login' %}">Sign in</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

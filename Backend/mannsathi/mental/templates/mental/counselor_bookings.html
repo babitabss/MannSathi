@@ -1,0 +1,201 @@
+{% extends 'users/base.html' %}
+{% block title %}My Sessions{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap">
+
+    <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+            <p style="font-size:12px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Counselor</p>
+            <h1>Client Sessions</h1>
+            <p>Manage your upcoming and past counseling sessions.</p>
+        </div>
+        <a href="{% url 'counselor_profile_edit' %}"
+           style="font-size:13px;font-weight:600;color:var(--teal);text-decoration:none;
+                  border:1.5px solid var(--teal);padding:8px 18px;border-radius:var(--radius-sm);white-space:nowrap;">
+            Edit Profile
+        </a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
+        <div class="section-card" style="padding:20px;text-align:center;">
+            <p style="font-size:28px;font-weight:800;color:var(--teal);font-family:'Playfair Display',serif;">{{ bookings.count }}</p>
+            <p style="font-size:12px;color:var(--gray-400);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">Total</p>
+        </div>
+        <div class="section-card" style="padding:20px;text-align:center;">
+            <p style="font-size:28px;font-weight:800;color:var(--amber);font-family:'Playfair Display',serif;">{{ bookings|length }}</p>
+            <p style="font-size:12px;color:var(--gray-400);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">Sessions</p>
+        </div>
+        <div class="section-card" style="padding:20px;text-align:center;">
+            <p style="font-size:28px;font-weight:800;color:var(--green);font-family:'Playfair Display',serif;">
+                {% if profile.average_rating %}{{ profile.average_rating }}{% else %}—{% endif %}
+            </p>
+            <p style="font-size:12px;color:var(--gray-400);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">Avg Rating</p>
+        </div>
+        <div class="section-card" style="padding:20px;text-align:center;">
+            <p style="font-size:28px;font-weight:800;font-family:'Playfair Display',serif;
+                color:{% if profile.is_available %}var(--green){% else %}var(--red){% endif %};">
+                {% if profile.is_available %}Live{% else %}Off{% endif %}
+            </p>
+            <p style="font-size:12px;color:var(--gray-400);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">Status</p>
+        </div>
+    </div>
+
+    {% if bookings %}
+    <div class="section-card">
+        <div class="section-header"><span class="section-title">All Sessions</span></div>
+        {% for booking in bookings %}
+        <div style="padding:24px;{% if not forloop.last %}border-bottom:1px solid var(--gray-100);{% endif %}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--navy));
+                                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <span style="color:white;font-size:18px;font-weight:700;">
+                            {{ booking.user.get_full_name|default:booking.user.username|first|upper }}
+                        </span>
+                    </div>
+                    <div>
+                        <p style="font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:4px;">
+                            {{ booking.user.get_full_name|default:booking.user.username }}
+                        </p>
+                        <p style="font-size:13px;color:var(--gray-400);">
+                            {{ booking.get_session_type_display }} · {{ booking.scheduled_at|date:"M d, Y" }} at {{ booking.scheduled_at|date:"g:i A" }}
+                        </p>
+                        {% if booking.note %}
+                        <p style="font-size:12px;color:var(--gray-400);margin-top:4px;">{{ booking.note }}</p>
+                        {% endif %}
+                        {% if booking.payment %}
+                            {% if booking.payment.status == 'completed' %}
+                            <span class="badge badge-green" style="margin-top:6px;">✓ Paid via {{ booking.payment.get_gateway_display }}</span>
+                            {% else %}
+                            <span class="badge badge-amber" style="margin-top:6px;">⏳ Payment {{ booking.payment.status }}</span>
+                            {% endif %}
+                        {% else %}
+                        <span class="badge badge-red" style="margin-top:6px;">No payment</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+
+                    <span class="badge {% if booking.status == 'confirmed' %}badge-green{% elif booking.status == 'pending' %}badge-amber{% elif booking.status == 'completed' %}badge-blue{% else %}badge-red{% endif %}">
+                        {{ booking.get_status_display }}
+                    </span>
+
+                    {% if booking.status == 'confirmed' %}
+                        {% if booking.session_type == 'video' or booking.session_type == 'voice' %}
+                        <a href="{{ booking.get_jitsi_url }}" target="_blank"
+                           style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;
+                                  background:linear-gradient(135deg,var(--teal),var(--navy));
+                                  color:white;border-radius:var(--radius-sm);text-decoration:none;
+                                  font-size:13px;font-weight:600;">
+                            <svg width="15" height="15" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                                <polygon points="23 7 16 12 23 17 23 7"/>
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                            </svg>
+                            Join Session
+                        </a>
+                        {% elif booking.session_type == 'text' %}
+                        <a href="{% url 'chat_room' booking.pk %}"
+                           style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;
+                                  background:linear-gradient(135deg,var(--teal),var(--navy));
+                                  color:white;border-radius:var(--radius-sm);text-decoration:none;
+                                  font-size:13px;font-weight:600;">
+                            <svg width="15" height="15" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                            </svg>
+                            Open Chat
+                        </a>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if booking.status == 'pending' or booking.status == 'confirmed' %}
+                    <div style="display:flex;gap:8px;">
+                        <form method="POST" action="{% url 'update_booking_status' booking.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="completed">
+                            <button type="submit"
+                                style="font-size:12px;padding:7px 14px;background:var(--teal);color:white;
+                                       border:none;border-radius:var(--radius-sm);cursor:pointer;
+                                       font-family:'Inter',sans-serif;font-weight:600;">
+                                ✓ Mark Done
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'update_booking_status' booking.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="cancelled">
+                            <button type="submit"
+                                style="font-size:12px;padding:7px 14px;background:white;color:var(--red);
+                                       border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);
+                                       cursor:pointer;font-family:'Inter',sans-serif;">
+                                Cancel
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    {% if booking.status == 'completed' and booking.review %}
+                    <span style="font-size:13px;color:var(--amber);">⭐ {{ booking.review.rating }}/5</span>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            {% if booking.status == 'confirmed' and booking.session_type != 'text' and booking.jitsi_room %}
+            <div style="margin-top:16px;padding:14px 18px;background:var(--teal-light);
+                        border-radius:var(--radius-sm);border:1.5px solid var(--teal-mid);
+                        display:flex;align-items:center;gap:12px;">
+                <svg width="18" height="18" fill="none" stroke="var(--teal)" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div>
+                    <p style="font-size:13px;font-weight:600;color:var(--teal);">
+                        {% if booking.session_type == 'video' %}Video call ready
+                        {% elif booking.session_type == 'voice' %}Voice call ready{% endif %}
+                    </p>
+                    <p style="font-size:12px;color:var(--teal);opacity:.8;">
+                        Click Join Session at the scheduled time. Your client uses the same link.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if booking.status == 'confirmed' and booking.session_type == 'text' %}
+            <div style="margin-top:16px;padding:14px 18px;background:var(--teal-light);
+                        border-radius:var(--radius-sm);border:1.5px solid var(--teal-mid);
+                        display:flex;align-items:center;gap:12px;">
+                <svg width="18" height="18" fill="none" stroke="var(--teal)" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+                <div>
+                    <p style="font-size:13px;font-weight:600;color:var(--teal);">Text chat ready</p>
+                    <p style="font-size:12px;color:var(--teal);opacity:.8;">
+                        Click Open Chat to start messaging your client directly on MannSaathi.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="section-card">
+        <div class="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            <h3>No sessions yet</h3>
+            <p>Your confirmed client bookings will appear here.</p>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

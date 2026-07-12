@@ -1,0 +1,57 @@
+{% extends 'users/base.html' %}
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+
+    <!-- Left panel -->
+    <div class="auth-left">
+        <div class="auth-left-content">
+            <p style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:2px;margin-bottom:24px;">MannSaathi</p>
+            <h2>Your mental wellness journey starts here</h2>
+            <p>Access professional counseling, track your mood, manage your finances, and connect with a supportive community — all in one place.</p>
+            <div class="auth-stat">
+                <div class="auth-stat-item">
+                    <div class="auth-stat-num">500+</div>
+                    <div class="auth-stat-label">Active Users</div>
+                </div>
+                <div class="auth-stat-item">
+                    <div class="auth-stat-num">50+</div>
+                    <div class="auth-stat-label">Verified Counselors</div>
+                </div>
+                <div class="auth-stat-item">
+                    <div class="auth-stat-num">NPR 500</div>
+                    <div class="auth-stat-label">Starting Price</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="auth-right">
+        <div class="auth-card">
+            <h1>Welcome back</h1>
+            <p class="subtitle">Sign in to your MannSaathi account</p>
+
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="field-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn-primary" style="margin-top:8px;">Sign In</button>
+            </form>
+
+            <div class="auth-footer">
+                New to MannSaathi? <a href="{% url 'register' %}">Create a free account</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

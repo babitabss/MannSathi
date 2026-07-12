@@ -1,0 +1,118 @@
+{% extends 'users/base.html' %}
+{% block title %}Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap">
+
+    <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+            <p style="font-size:12px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Finance</p>
+            <h1>Finance Tracker</h1>
+            <p>Monitor your income, expenses and savings goals.</p>
+        </div>
+        <a href="{% url 'add_transaction' %}" class="btn-primary"
+           style="width:auto;padding:10px 22px;text-decoration:none;display:inline-block;white-space:nowrap;">
+            + Add Transaction
+        </a>
+    </div>
+
+    <!-- Summary -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
+        <div class="section-card" style="padding:24px;">
+            <p style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Total Income</p>
+            <p style="font-size:28px;font-weight:800;color:var(--green);font-family:'Playfair Display',serif;">NPR {{ total_income }}</p>
+        </div>
+        <div class="section-card" style="padding:24px;">
+            <p style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Total Expenses</p>
+            <p style="font-size:28px;font-weight:800;color:var(--red);font-family:'Playfair Display',serif;">NPR {{ total_expense }}</p>
+        </div>
+        <div class="section-card" style="padding:24px;{% if balance >= 0 %}border-color:var(--green);{% else %}border-color:var(--red);{% endif %}">
+            <p style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Balance</p>
+            <p style="font-size:28px;font-weight:800;font-family:'Playfair Display',serif;
+                color:{% if balance >= 0 %}var(--teal){% else %}var(--red){% endif %};">NPR {{ balance }}</p>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+
+        <!-- Transactions -->
+        <div>
+            <div class="section-card">
+                <div class="section-header"><span class="section-title">Recent Transactions</span></div>
+                {% if recent %}
+                {% for t in recent %}
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;{% if not forloop.last %}border-bottom:1px solid var(--gray-100);{% endif %}">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:36px;height:36px;border-radius:9px;
+                            background:{% if t.type == 'income' %}var(--green-pale){% else %}#fef2f2{% endif %};
+                            display:flex;align-items:center;justify-content:center;">
+                            <svg width="16" height="16" fill="none" stroke="{% if t.type == 'income' %}var(--green){% else %}var(--red){% endif %}" stroke-width="2" viewBox="0 0 24 24">
+                                {% if t.type == 'income' %}
+                                <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+                                {% else %}
+                                <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                        <div>
+                            <p style="font-size:13.5px;font-weight:600;color:var(--gray-900);">{{ t.get_category_display }}</p>
+                            <p style="font-size:12px;color:var(--gray-400);">{{ t.date }}{% if t.note %} · {{ t.note }}{% endif %}</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <p style="font-size:14px;font-weight:700;color:{% if t.type == 'income' %}var(--green){% else %}var(--red){% endif %};">
+                            {% if t.type == 'income' %}+{% else %}-{% endif %}NPR {{ t.amount }}
+                        </p>
+                        <form method="POST" action="{% url 'delete_transaction' t.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" style="background:none;border:none;color:var(--gray-400);cursor:pointer;font-size:18px;line-height:1;">×</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state" style="padding:40px;">
+                    <p>No transactions yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Goals -->
+        <div>
+            <div class="section-card">
+                <div class="section-header">
+                    <span class="section-title">Savings Goals</span>
+                    <a href="{% url 'add_goal' %}" style="font-size:13px;color:var(--teal);text-decoration:none;font-weight:600;">+ Add Goal</a>
+                </div>
+                {% if goals %}
+                {% for goal in goals %}
+                <div style="padding:20px;{% if not forloop.last %}border-bottom:1px solid var(--gray-100);{% endif %}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <p style="font-size:14px;font-weight:600;color:var(--gray-900);">{{ goal.name }}</p>
+                        <form method="POST" action="{% url 'delete_goal' goal.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" style="background:none;border:none;color:var(--gray-400);cursor:pointer;font-size:18px;">×</button>
+                        </form>
+                    </div>
+                    <div style="background:var(--gray-100);border-radius:100px;height:8px;margin-bottom:10px;overflow:hidden;">
+                        <div style="background:linear-gradient(90deg,var(--teal),var(--green));height:8px;border-radius:100px;width:{{ goal.progress_percentage }}%;transition:width .3s;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-400);">
+                        <span>NPR {{ goal.saved_amount }} saved</span>
+                        <span style="font-weight:600;color:var(--teal);">{{ goal.progress_percentage }}%</span>
+                    </div>
+                    <p style="font-size:12px;color:var(--gray-400);margin-top:4px;">Target: NPR {{ goal.target_amount }} by {{ goal.target_date }}</p>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state" style="padding:40px;">
+                    <p>No savings goals yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

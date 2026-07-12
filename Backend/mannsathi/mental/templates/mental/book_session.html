@@ -1,0 +1,51 @@
+{% extends 'users/base.html' %}
+{% block title %}Book Session{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap" style="max-width:600px;">
+
+    <a href="{% url 'counselor_detail' counselor.pk %}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-400);text-decoration:none;margin-bottom:24px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to Profile
+    </a>
+
+    <div class="dashboard-header">
+        <p style="font-size:12px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">New Booking</p>
+        <h1>Book with {{ counselor.user.get_full_name|default:counselor.user.username }}</h1>
+        <p>Fill in the details below. You will be redirected to payment after booking.</p>
+    </div>
+
+    <div class="section-card">
+        <!-- Counselor summary -->
+        <div style="padding:20px 24px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;gap:14px;">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--navy));
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span style="color:white;font-size:18px;font-weight:700;font-family:'Playfair Display',serif;">
+                    {{ counselor.user.get_full_name|default:counselor.user.username|first|upper }}
+                </span>
+            </div>
+            <div>
+                <p style="font-size:14px;font-weight:600;color:var(--gray-900);">{{ counselor.user.get_full_name|default:counselor.user.username }}</p>
+                <p style="font-size:13px;color:var(--gray-400);">NPR {{ counselor.price_per_session }} per session</p>
+            </div>
+        </div>
+
+        <div style="padding:28px;">
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="field-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn-primary" style="margin-top:8px;">Confirm Booking & Proceed to Payment</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

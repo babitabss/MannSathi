@@ -1,0 +1,91 @@
+{% extends 'users/base.html' %}
+{% block title %}Log Mood{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap" style="max-width:600px;">
+
+    <div class="dashboard-header">
+        <p style="font-size:12px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Daily Check-in</p>
+        <h1>How are you feeling today?</h1>
+        <p>This is private. Only you can see your journal.</p>
+    </div>
+
+    <div class="section-card">
+        <div class="section-body">
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                <!-- Mood Score -->
+                <div class="form-group">
+                    <label>Overall Mood</label>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+                        {% for value, label in form.mood_score.field.choices %}
+                        <label style="display:flex;align-items:center;gap:8px;padding:10px 16px;
+                                      border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);
+                                      cursor:pointer;font-size:13.5px;transition:all .15s;">
+                            <input type="radio" name="mood_score" value="{{ value }}"
+                                {% if form.mood_score.value == value|stringformat:"s" %}checked{% endif %}
+                                style="display:none;"
+                                onchange="selectMood(this)">
+                            <span>{{ label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% for error in form.mood_score.errors %}
+                        <div class="field-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Emotions -->
+                <div class="form-group">
+                    <label>Emotions (select all that apply)</label>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:6px;">
+                        {% for value, label in form.emotions.field.choices %}
+                        <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;
+                                      border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);
+                                      cursor:pointer;font-size:13px;transition:all .15s;">
+                            <input type="checkbox" name="emotions" value="{{ value }}"
+                                {% if value in form.emotions.value %}checked{% endif %}
+                                style="accent-color:var(--teal);">
+                            <span>{{ label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Triggers -->
+                <div class="form-group">
+                    <label>What triggered this mood?</label>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:6px;">
+                        {% for value, label in form.triggers.field.choices %}
+                        <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;
+                                      border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);
+                                      cursor:pointer;font-size:13px;transition:all .15s;">
+                            <input type="checkbox" name="triggers" value="{{ value }}"
+                                {% if value in form.triggers.value %}checked{% endif %}
+                                style="accent-color:var(--teal);">
+                            <span>{{ label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <label>Private Notes (optional)</label>
+                    {{ form.notes }}
+                </div>
+
+                <button type="submit" class="btn-primary">Save Entry</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<style>
+input[type="radio"]:checked + span { color: var(--teal); font-weight: 600; }
+label:has(input[type="radio"]:checked) { border-color: var(--teal) !important; background: var(--teal-light); }
+label:has(input[type="checkbox"]:checked) { border-color: var(--teal) !important; background: var(--teal-light); }
+</style>
+{% endblock %}

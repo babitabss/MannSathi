@@ -1,0 +1,94 @@
+{% extends 'users/base.html' %}
+{% block title %}Community{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap" style="max-width:760px;">
+
+    <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+            <p style="font-size:12px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Community</p>
+            <h1>Community Feed</h1>
+            <p>A safe space to share, support, and connect.</p>
+        </div>
+        <a href="{% url 'create_post' %}" class="btn-primary"
+           style="width:auto;padding:10px 22px;text-decoration:none;display:inline-block;white-space:nowrap;">
+            + Share a Post
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <div style="background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:14px 18px;margin-bottom:24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <a href="{% url 'community_feed' %}"
+           style="font-size:13px;padding:6px 14px;border-radius:100px;text-decoration:none;font-weight:500;
+                  {% if not category %}background:var(--teal);color:white;{% else %}background:var(--gray-100);color:var(--gray-600);{% endif %}">
+            All
+        </a>
+        {% for value, label in categories %}
+        <a href="?category={{ value }}"
+           style="font-size:13px;padding:6px 14px;border-radius:100px;text-decoration:none;font-weight:500;
+                  {% if category == value %}background:var(--teal);color:white;{% else %}background:var(--gray-100);color:var(--gray-600);{% endif %}">
+            {{ label }}
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if posts %}
+    <div style="display:flex;flex-direction:column;gap:16px;">
+        {% for post in posts %}
+        <div class="section-card" style="transition:all .2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow)'" onmouseout="this.style.transform='none';this.style.boxShadow='var(--shadow-sm)'">
+            <div style="padding:24px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                    <div>
+                        <span class="badge badge-blue" style="margin-bottom:8px;display:inline-block;">{{ post.get_category_display }}</span>
+                        <h3 style="font-size:17px;font-weight:700;color:var(--gray-900);letter-spacing:-.2px;">
+                            <a href="{% url 'post_detail' post.pk %}" style="text-decoration:none;color:inherit;">{{ post.title }}</a>
+                        </h3>
+                    </div>
+                    {% if post.user == request.user %}
+                    <form method="POST" action="{% url 'delete_post' post.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" style="background:none;border:none;color:var(--gray-400);cursor:pointer;font-size:20px;line-height:1;padding:0 4px;">×</button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <p style="font-size:14px;color:var(--gray-600);line-height:1.7;margin-bottom:16px;">
+                    {{ post.content|truncatewords:30 }}
+                </p>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid var(--gray-100);">
+                    <span style="font-size:12.5px;color:var(--gray-400);">
+                        {{ post.display_name }} · {{ post.created_at|date:"M d, Y" }}
+                    </span>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <span style="font-size:13px;color:var(--gray-400);">{{ post.total_likes }} likes · {{ post.comments.count }} comments</span>
+                        <a href="{% url 'post_detail' post.pk %}"
+                           style="font-size:13px;font-weight:600;color:var(--teal);text-decoration:none;">
+                            Read more →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="section-card">
+        <div class="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            <h3>No posts yet</h3>
+            <p>Be the first to share something with the community.</p>
+            <a href="{% url 'create_post' %}" class="btn-primary"
+               style="display:inline-block;width:auto;padding:10px 24px;text-decoration:none;margin-top:16px;">
+                Create First Post
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

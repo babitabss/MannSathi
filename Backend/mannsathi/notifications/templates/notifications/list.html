@@ -1,0 +1,100 @@
+{% extends 'users/base.html' %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap" style="max-width:680px;">
+
+    <div class="dashboard-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+            <p style="font-size:12px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Notifications</p>
+            <h1>Your Notifications</h1>
+            <p>Stay updated on your sessions, payments and more.</p>
+        </div>
+        {% if notifications %}
+        <a href="{% url 'mark_all_read' %}"
+           style="font-size:13px;font-weight:600;color:var(--teal);text-decoration:none;
+                  border:1.5px solid var(--teal);padding:8px 16px;border-radius:var(--radius-sm);white-space:nowrap;">
+            Mark all read
+        </a>
+        {% endif %}
+    </div>
+
+    {% if notifications %}
+    <div class="section-card">
+        {% for n in notifications %}
+        <a href="{% url 'mark_read' n.pk %}"
+           style="display:flex;align-items:flex-start;gap:14px;padding:18px 24px;text-decoration:none;
+                  {% if not forloop.last %}border-bottom:1px solid var(--gray-100);{% endif %}
+                  {% if not n.is_read %}background:#fafeff;{% else %}background:white;{% endif %}
+                  transition:background .15s;"
+           onmouseover="this.style.background='var(--gray-50)'"
+           onmouseout="this.style.background='{% if not n.is_read %}#fafeff{% else %}white{% endif %}'">
+
+            <!-- Icon -->
+            <div style="width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+                {% if n.type == 'payment' %}background:#f0fdf4;
+                {% elif n.type == 'booking' %}background:var(--teal-light);
+                {% elif n.type == 'approved' %}background:#f0fdf4;
+                {% elif n.type == 'review' %}background:#fffbeb;
+                {% else %}background:var(--gray-100);{% endif %}">
+                {% if n.type == 'payment' %}
+                <svg width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                </svg>
+                {% elif n.type == 'booking' %}
+                <svg width="18" height="18" fill="none" stroke="var(--teal)" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {% elif n.type == 'approved' %}
+                <svg width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                {% elif n.type == 'review' %}
+                <svg width="18" height="18" fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                {% else %}
+                <svg width="18" height="18" fill="none" stroke="var(--gray-400)" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                {% endif %}
+            </div>
+
+            <!-- Content -->
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                    <p style="font-size:14px;font-weight:{% if not n.is_read %}700{% else %}500{% endif %};color:var(--gray-900);">
+                        {{ n.title }}
+                    </p>
+                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                        <p style="font-size:11px;color:var(--gray-400);white-space:nowrap;">{{ n.created_at|date:"M d · g:i A" }}</p>
+                        {% if not n.is_read %}
+                        <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0;"></div>
+                        {% endif %}
+                    </div>
+                </div>
+                <p style="font-size:13px;color:var(--gray-400);margin-top:4px;line-height:1.5;">{{ n.message }}</p>
+            </div>
+
+        </a>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="section-card">
+        <div class="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+            <h3>No notifications yet</h3>
+            <p>You will be notified about bookings, payments and session updates here.</p>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
